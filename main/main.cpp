@@ -4,16 +4,21 @@
 #include "hal/adc_types.h"
 #include "model.h"
 #include "driver/adc.h"
+#include "driver/dac.h"
 #include "esp_adc_cal.h"
 #include "freertos/FreeRTOS.h"
+#include "Audio.h"
 
 #define NUM_CLASSES 26
+#define SAMPLE_RATE 44100
 
 const adc1_channel_t THUMB = ADC1_CHANNEL_0;
 const adc1_channel_t INDEX = ADC1_CHANNEL_1;
 const adc1_channel_t MIDDLE = ADC1_CHANNEL_2;
 const adc1_channel_t RING = ADC1_CHANNEL_3;
 const adc1_channel_t PINKY = ADC1_CHANNEL_4;
+
+const dac_channel_t AUDIO = DAC_CHANNEL_1;
 
 static esp_adc_cal_characteristics_t adc1_chars;
 
@@ -38,7 +43,7 @@ extern "C" void app_main(void)
   if(model.setup(converted_model_tflite)){
     printf("success setup model\n");
   }else{
-    printf("failed setup model");
+    printf("failed setup model\n");
   }
 
   //adc1 used
@@ -50,6 +55,8 @@ extern "C" void app_main(void)
   adc1_config_channel_atten(MIDDLE, ADC_ATTEN_DB_11);
   adc1_config_channel_atten(RING, ADC_ATTEN_DB_11);
   adc1_config_channel_atten(PINKY, ADC_ATTEN_DB_11);
+
+  Player::setup(AUDIO, SAMPLE_RATE);
 
   // loop
   while(1){
@@ -74,6 +81,7 @@ extern "C" void app_main(void)
     if(res[classIndex] < 50.0f) continue;
 
     // do text to speech
+    printf("result is %d with %f%%\n", classIndex, res[classIndex]);
 
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
