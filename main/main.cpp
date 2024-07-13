@@ -83,6 +83,8 @@ extern "C" void app_main(void)
     // do text to speech
     printf("result is %d with %f%%\n", classIndex, res[classIndex]);
 
+    Player::play(classIndex);
+
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
