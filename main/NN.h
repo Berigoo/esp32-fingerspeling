@@ -6,16 +6,22 @@
 #include "conf.h"
 
 
+
 class NN {
 public:
-  NN();
   ~NN() = default;
+
+  static NN& getInstance();
 
   bool setup(const void* buf);
   float* getInputBuff();
   float* predict();
 private:
-  tflite::MicroMutableOpResolver<10>* resolver;
+  NN() = default;
+  NN(const NN&) = delete;
+  void operator=(const NN&) = delete;
+
+  tflite::MicroMutableOpResolver<3> resolver;
   tflite::MicroInterpreter* interpreter;
   TfLiteTensor* input;
   TfLiteTensor* output;

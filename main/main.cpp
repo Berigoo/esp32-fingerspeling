@@ -22,11 +22,11 @@ const dac_channel_t AUDIO = DAC_CHANNEL_1;
 
 static esp_adc_cal_characteristics_t adc1_chars;
 
-int argmax(float** arr, size_t size){
+int argmax(float* arr, size_t size){
   float temp = 0.0f;
   int index = 0;
   for(size_t i=0; i<size; i++){
-    float curr = *arr[i];
+    float curr = arr[i];
     if(curr > temp){
       temp = curr;
       index = i;
@@ -39,52 +39,58 @@ int argmax(float** arr, size_t size){
 extern "C" void app_main(void)
 {
   // setup
-  NN model;
-  if(model.setup(converted_model_tflite)){
+  if(NN::getInstance().setup(converted_model_tflite)){
     printf("success setup model\n");
   }else{
     printf("failed setup model\n");
   }
-
+  
+  /*printf("Setup");*/
   //adc1 used
-  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc1_chars);
-  adc1_config_width(ADC_WIDTH_BIT_12);
-
-  adc1_config_channel_atten(THUMB, ADC_ATTEN_DB_11);
-  adc1_config_channel_atten(INDEX, ADC_ATTEN_DB_11);
-  adc1_config_channel_atten(MIDDLE, ADC_ATTEN_DB_11);
-  adc1_config_channel_atten(RING, ADC_ATTEN_DB_11);
-  adc1_config_channel_atten(PINKY, ADC_ATTEN_DB_11);
-
-  Player::setup(AUDIO, SAMPLE_RATE);
+  /*esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc1_chars);*/
+  /*adc1_config_width(ADC_WIDTH_BIT_12);*/
+  /**/
+  /*adc1_config_channel_atten(THUMB, ADC_ATTEN_DB_11);*/
+  /*adc1_config_channel_atten(INDEX, ADC_ATTEN_DB_11);*/
+  /*adc1_config_channel_atten(MIDDLE, ADC_ATTEN_DB_11);*/
+  /*adc1_config_channel_atten(RING, ADC_ATTEN_DB_11);*/
+  /*adc1_config_channel_atten(PINKY, ADC_ATTEN_DB_11);*/
+  /**/
+  /*Player::setup(AUDIO, SAMPLE_RATE);*/
 
   // loop
   while(1){
     // 0 ~ 3.3 V
-    float denominator = 4095.0f;
-    float thumb = (adc1_get_raw(THUMB) / denominator); 
-    float index = (adc1_get_raw(INDEX) / denominator);
-    float middle = (adc1_get_raw(MIDDLE) / denominator);
-    float ring = (adc1_get_raw(RING) / denominator);
-    float pinky = (adc1_get_raw(PINKY) / denominator);
+    /*float denominator = 4095.0f;*/
+    /*float thumb = (adc1_get_raw(THUMB) / denominator); */
+    /*float index = (adc1_get_raw(INDEX) / denominator);*/
+    /*float middle = (adc1_get_raw(MIDDLE) / denominator);*/
+    /*float ring = (adc1_get_raw(RING) / denominator);*/
+    /*float pinky = (adc1_get_raw(PINKY) / denominator);*/
+    /**/
+    /*printf("%f : %f : %f : %f : %f", thumb, index, middle, ring, pinky);*/
 
-    printf("%f : %f : %f : %f : %f", thumb, index, middle, ring, pinky);
+    float thumb = 0.89;
+    float index = 0.79;
+    float middle = 0.6;
+    float ring = 0.6;
+    float pinky = 0.5;
 
-    model.getInputBuff()[0] = thumb;
-    model.getInputBuff()[1] = thumb;
-    model.getInputBuff()[2] = thumb;
-    model.getInputBuff()[3] = thumb;
-    model.getInputBuff()[4] = thumb;
+    NN::getInstance().getInputBuff()[0] = thumb;
+    NN::getInstance().getInputBuff()[1] = index;
+    NN::getInstance().getInputBuff()[2] = middle;
+    NN::getInstance().getInputBuff()[3] = ring;
+    NN::getInstance().getInputBuff()[4] = pinky;
 
-    float* res = model.predict();
-    int classIndex = argmax(&res, NUM_CLASSES);
-    if(res[classIndex] < 50.0f) continue;
+    float* res = NN::getInstance().predict();
+    int classIndex = argmax(res, NUM_CLASSES);
+    if(res[classIndex] < 0.5f) continue;
 
     // do text to speech
-    printf("result is %d with %f%%\n", classIndex, res[classIndex]);
+    printf("class index %d with %f\n", classIndex, res[classIndex]);
 
-    Player::play(classIndex);
+    /*Player::play(classIndex);*/
 
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
 }

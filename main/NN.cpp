@@ -1,7 +1,8 @@
 #include "NN.h"
 
-NN::NN(){
-  resolver = new tflite::MicroMutableOpResolver<10>();
+NN& NN::getInstance(){
+  static NN instance;
+  return instance;
 }
 
 bool NN::setup(const void* buf){
@@ -13,14 +14,12 @@ bool NN::setup(const void* buf){
   }
 
   // retrieve ops
-  if(resolverCheck(resolver->AddSoftmax())) return false;
-  if(resolverCheck(resolver->AddRelu())) return false;
-  if(resolverCheck(resolver->AddFullyConnected())) return false;
-  if(resolverCheck(resolver->AddReshape())) return false;
-  if(resolverCheck(resolver->AddMul())) return false;
+  if(resolverCheck(resolver.AddSoftmax())) return false;
+  if(resolverCheck(resolver.AddRelu())) return false;
+  if(resolverCheck(resolver.AddFullyConnected())) return false;
 
   // create interpreter
-  interpreter = new tflite::MicroInterpreter(model, *resolver, tensorArenaBuff, K_TENSOR_ARENA_SIZE);
+  interpreter = new tflite::MicroInterpreter(model, resolver, tensorArenaBuff, K_TENSOR_ARENA_SIZE);
   if(interpreter->AllocateTensors() != kTfLiteOk){
     MicroPrintf("failed to allocate tensors");
     return false;
