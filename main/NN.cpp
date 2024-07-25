@@ -9,7 +9,7 @@ bool NN::setup(const void* buf){
   // map model
   model = tflite::GetModel(buf);
   if(model->version() != TFLITE_SCHEMA_VERSION){
-    MicroPrintf("Model provided is schema version %d not equal to supported version %d", model->version(), TFLITE_SCHEMA_VERSION);
+    ESP_LOGE("TF", "Model provided is schema version %" PRIu32 "not equal to supported version %d", model->version(), TFLITE_SCHEMA_VERSION);
     return false;
   }
 
@@ -21,7 +21,7 @@ bool NN::setup(const void* buf){
   // create interpreter
   interpreter = new tflite::MicroInterpreter(model, resolver, tensorArenaBuff, K_TENSOR_ARENA_SIZE);
   if(interpreter->AllocateTensors() != kTfLiteOk){
-    MicroPrintf("failed to allocate tensors");
+    ESP_LOGE("TF", "Failed to allocate tensors");
     return false;
   }
 
@@ -30,7 +30,7 @@ bool NN::setup(const void* buf){
   output = interpreter->output(0);    
 
   // info
-  MicroPrintf("used mems %d bytes\n", interpreter->arena_used_bytes());
+  ESP_LOGI("TF", "Memory allocated %zu bytes, heap memory left %" PRIu32, interpreter->arena_used_bytes(), esp_get_free_heap_size());
 
   return true;
 }
@@ -44,6 +44,7 @@ float* NN::getInputBuff(){
 }
 
 float* NN::predict(){
+  ESP_LOGI("TF", "Predicting features (%f, %f, %f, %f, %f)", getInputBuff()[0], getInputBuff()[1], getInputBuff()[2], getInputBuff()[3], getInputBuff()[4]);
   interpreter->Invoke();
   return output->data.f;
 }

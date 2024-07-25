@@ -3,3 +3,6 @@ managed_components
 .cache
 cmake-build-debug
 .idea
+.banks
+.cmake-build-debug
+archive.zip
